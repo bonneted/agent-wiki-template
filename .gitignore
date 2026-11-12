@@ -1,0 +1,16 @@
+# Sources stay out of git
+resources/*
+!resources/README.md
+
+# Generated outputs
+output/
+outputs/
+
+# Obsidian per-user state
+docs/.obsidian/workspace*.json
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
