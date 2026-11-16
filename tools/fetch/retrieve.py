@@ -18,7 +18,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
@@ -54,7 +54,7 @@ def _is_pdf(body: bytes) -> bool:
 
 def _get(url: str, headers: dict[str, str]) -> bytes:
     request = urllib.request.Request(
-        url, headers={"User-Agent": "research-agent-template (fetch)", **headers}
+        url, headers={"User-Agent": "agent-wiki-template (fetch)", **headers}
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         return response.read()
@@ -72,6 +72,34 @@ def _ask(get: Get, url: str, headers: dict[str, str] | None = None) -> bytes | N
         raise RetrievalError(f"{url}: {error}") from error
 
 
+_PAGE = 100
+
+
+def _holds(data: dict, citekey: str) -> bool:
+    """Whether an item holds the citekey: Zotero 7's field, or Better BibTeX's line in Extra."""
+    return data.get("citationKey") == citekey or f"Citation Key: {citekey}" in (
+        data.get("extra") or ""
+    ).splitlines()
+
+
+def _with_citekey(
+    index: list[dict] | None, listing: Callable[[str], list[dict]], citekey: str
+) -> tuple[list[dict], list[dict]]:
+    """The top-level items holding the citekey, and the listing they were found in.
+
+    Zotero's search never matches a citekey, so the library's top-level items are listed
+    once, page by page (`index` is that listing, if already made), and read here.
+    """
+    if index is None:
+        index = []
+        while True:
+            page = listing(f"items/top?format=json&limit={_PAGE}&start={len(index)}")
+            index += page
+            if len(page) < _PAGE:
+                break
+    return [item for item in index if _holds(item.get("data", {}), citekey)], index
+
+
 @dataclass
 class Zotero:
     """The PDF attached to the item with the citekey in a Zotero library, by its Web API."""
@@ -80,6 +108,7 @@ class Zotero:
     api_key: str
     get: Get = _get
     name: str = "Zotero"
+    _index: list[dict] | None = field(default=None, init=False, repr=False)
 
     def _ask(self, path: str) -> bytes | None:
         return _ask(
@@ -103,15 +132,7 @@ class Zotero:
             raise RetrievalError(f"Zotero answered {path} with no JSON") from error
 
     def retrieve(self, entry: Entry) -> bytes | None:
-        query = urllib.parse.quote(entry.citekey)
-        # Zotero 7 keeps the citekey in its own field; Better BibTeX before it, in Extra.
-        items = [
-            item
-            for item in self._json(f"items?q={query}&qmode=everything&format=json")
-            if item.get("data", {}).get("citationKey") == entry.citekey
-            or f"Citation Key: {entry.citekey}"
-            in item.get("data", {}).get("extra", "").splitlines()
-        ]
+        items, self._index = _with_citekey(self._index, self._json, entry.citekey)
         for item in items:
             for child in self._json(f"items/{item['key']}/children?format=json"):
                 if child.get("data", {}).get("contentType") == "application/pdf":

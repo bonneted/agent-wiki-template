@@ -2,7 +2,7 @@
 
 A light project skeleton for working on any topic with an AI coding agent: your sources, your notes, a wiki the agent maintains, and your code in one folder.
 
-It is the first version of the [research knowledge tree](https://gitlab.kuleuven.be/r2d/collaboration/research-knowledge-tree), kept as is because it is light: no rules, inquiries or reviews, just sources → wiki ← code. Use the knowledge tree when the work needs research practice enforced; use this one to keep a topic, a supervision or a side project in order. The ideas behind both are in the talk *Doing research with AI agents* ([slides](https://gitlab.kuleuven.be/r2d/collaboration/research-knowledge-tree/-/blob/main/talk/doing-research-with-ai-agents.pdf)).
+It is the first version of the [research knowledge tree](https://github.com/bonneted/research-knowledge-tree), kept as is because it is light: no rules, inquiries or reviews, just sources → wiki ← code. Use the knowledge tree when the work needs research practice enforced (see [When to move](#when-to-move-to-the-knowledge-tree)); use this one to keep a topic, a supervision or a side project in order. The ideas behind both are in the talk *Doing research with AI agents* ([slides](https://github.com/bonneted/research-knowledge-tree/blob/main/talk/doing-research-with-ai-agents.pdf)).
 
 ```
 resources/        papers (<citekey>.pdf), code, data, legacy material, inbox/ to drop PDFs. Outside git
@@ -59,6 +59,12 @@ Monte Carlo vs polynomial chaos for the tip deflection of a cantilever beam, δ 
 2. `Find about 5 key papers on PCE for uncertainty propagation and Sobol sensitivity (Xiu & Karniadakis 2002, Sudret 2008, Blatman & Sudret 2011…) and add them with uv run refs add.` Then run `uv run fetch`, drop in the PDFs it lists as missing, and ask: `Digest the new papers.`
 3. `Implement MC and PCE (chaospy) for the tip deflection, check mean and variance against the analytical result, compute first-order Sobol indices, then update the wiki.`
 4. Open `docs/` in Obsidian: index, a source digest, the graph.
+
+## When to move to the knowledge tree
+
+Move when the project needs more than a tidy memory: a question you must answer and defend (a protocol fixed before results, checks on known cases, findings with a status and their evidence), several sub-questions that deserve their own folder, or a reviewer who must trust the numbers. The [knowledge tree](https://github.com/bonneted/research-knowledge-tree) adds rules, phases, findings and sub-inquiries, and its `rkt` tool also reads PDFs that ZotMoov links outside Zotero's storage.
+
+A wiki started here is a good start there: same `sources/`, `concepts/` and index. Three changes, which the agent can make: `[[wikilinks]]` become relative Markdown links, `docs/CONTEXT.md` becomes `GLOSSARY.md`, and values in the digests get their page (`[@key, p. 7]`). `docs/notes/` has no counterpart: its plans go to `PLAN.md`.
 
 ## Limits
 

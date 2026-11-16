@@ -199,12 +199,14 @@ class Web:
             ]
             return _page(members, query)
         if method == "GET" and segments in (["items"], ["items", "top"]):
-            # Like the Web API's `qmode=everything`: the text anywhere in the item.
+            # Like the Web API's `qmode=everything`: the text in any field but the
+            # citekey's (Zotero 7's `citationKey`, Better BibTeX's line in Extra), which
+            # the real search never matches; with no text, every item.
             text = query.get("q", "").lower()
             found = [
                 item
                 for item in self.items.values()
-                if text in json.dumps(item["data"]).lower()
+                if text in json.dumps(_searched(item["data"])).lower()
                 and (segments == ["items"] or "parentItem" not in item["data"])
             ]
             return _page(found, query)
@@ -304,6 +306,11 @@ def _reply(
     if not isinstance(body, bytes):
         body = (body if isinstance(body, str) else json.dumps(body)).encode()
     return zotero.Response(status, headers or {}, body)
+
+
+def _searched(data: dict) -> dict:
+    """The fields of an item the Web API's search reads: not the citekey's."""
+    return {name: value for name, value in data.items() if name not in ("citationKey", "extra")}
 
 
 def _page(objects: list[dict], query: dict) -> zotero.Response:
